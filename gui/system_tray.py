@@ -15,10 +15,19 @@ class Icon(Enum):
     def __str__(self):
         return self.value
 
-
 get_menu_name = lambda status: f"Status: {Status[status]}"
 
+has_match = lambda text, pattern: bool(re.search(re.compile(pattern), text))
+
+has_matching_items = lambda items, pattern: any([has_match(i.details, pattern) for i in items.values()])
+
 have_same_items = lambda d1, d2: d1.keys() == d2.keys()
+
+def get_filtered_diff(old, new, pattern):
+    det_old, det_new = list(map(lambda i: i.details, old.values())), list(map(lambda i: i.details, new.values()))
+    diff = list(set(det_new) - set(det_old))
+    filtered = list(filter(lambda d: has_match(d, pattern), diff))
+    return len(filtered) > 0
 
 def resource_path(relative_path):
     try:
@@ -71,6 +80,10 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         same_status = new_state.status == self.state.status
         same_details = have_same_items(self.state.details, new_state.details)
         same_others = have_same_items(self.state.others, new_state.others)
+        new_filtered_items, has_matching = None, None
+        if self.config.notificationRegex is not None:
+            new_filtered_items = get_filtered_diff(self.state.details, new_state.details, self.config.notificationRegex)
+            has_matching = has_matching_items(new_state.details, self.config.notificationRegex)
 
         if not same_status:
             self.status_menu.setTitle(get_menu_name(new_state.status))
@@ -84,7 +97,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
         self.state = new_state
 
-        if new_state.status in self.config.notificationStatuses and (not same_status or not same_details):
+        if new_state.status in self.config.notificationStatuses and (((not same_status and has_matching) or new_filtered_items) if self.config.notificationRegex is not None else (not same_status or not same_details)):
             self.show_notification()
 
 
@@ -98,8 +111,8 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     def show_notification(self):
         items_no = len(self.state.details.keys())
         {
-            "Success": lambda: self.showMessage("Weird", f"Everything works.", 1, self.config.notificationTime),
+            "Success": lambda: self.showMessage("Weird", f"Everything works", 1, self.config.notificationTime),
             "InProgress": lambda: self.showMessage("Hold on", f"{items_no} item(s) in progress...", 2, self.config.notificationTime),
-            "Failure": lambda: self.showMessage("FUCK UP ALERT !!!", f"{items_no} failed item(s)!", 3, self.config.notificationTime),
+            "Failure": lambda: self.showMessage("FUCK UP ALERT!!!", f"{items_no} item(s) failed!", 3, self.config.notificationTime),
             "Unknown": lambda: None
         }[self.state.status]()
