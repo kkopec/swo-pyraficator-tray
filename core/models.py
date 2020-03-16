@@ -1,6 +1,7 @@
 import re
 from enum import Enum
 
+
 class Status(Enum):
     Failure = "Failure"
     InProgress = "In Progress"
@@ -47,4 +48,3 @@ class State:
     def parse_items(self, items):
         status_items = [StatusItem(i) for i in items] if items is not None else []
         return dict([(item.id, item) for item in status_items])
-

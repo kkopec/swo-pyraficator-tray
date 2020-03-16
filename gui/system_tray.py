@@ -28,6 +28,7 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
+
 class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
     def __init__(self, config, parent=None):
@@ -51,15 +52,18 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         self.setContextMenu(menu)
 
         self.timer = QtCore.QTimer(self)
-        self.timer.setInterval(config.REFRESH_INTERVAL)
+        self.timer.setInterval(config.refreshInterval)
         self.timer.timeout.connect(self.refresh_state)
         self.timer.start()
+
 
     def exit(self):
         QtCore.QCoreApplication.exit()
 
+
     def open_in_browser(self, url):
         QtGui.QDesktopServices.openUrl(QtCore.QUrl(url))
+
 
     def refresh_state(self):
         new_state = get_status()
@@ -80,7 +84,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
         self.state = new_state
 
-        if new_state.status in self.config.NOTIFICATIONS_STATUSES and (not same_status or not same_details):
+        if new_state.status in self.config.notificationStatuses and (not same_status or not same_details):
             self.show_notification()
 
 
@@ -90,12 +94,12 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
             action = menu.addAction(item.name)
             action.triggered.connect(partial(SystemTrayIcon.open_in_browser, self, item.link))
 
+
     def show_notification(self):
         items_no = len(self.state.details.keys())
         {
-            "Success": lambda: self.showMessage("Weird", f"Everything works.", 1, self.config.NOTIFICATION_TIME),
-            "InProgress": lambda: self.showMessage("Hold on", f"{items_no} item(s) in progress...", 2, self.config.NOTIFICATION_TIME),
-            "Failure": lambda: self.showMessage("FUCK UP ALERT !!!", f"{items_no} failed item(s)!", 3, self.config.NOTIFICATION_TIME),
+            "Success": lambda: self.showMessage("Weird", f"Everything works.", 1, self.config.notificationTime),
+            "InProgress": lambda: self.showMessage("Hold on", f"{items_no} item(s) in progress...", 2, self.config.notificationTime),
+            "Failure": lambda: self.showMessage("FUCK UP ALERT !!!", f"{items_no} failed item(s)!", 3, self.config.notificationTime),
             "Unknown": lambda: None
         }[self.state.status]()
-

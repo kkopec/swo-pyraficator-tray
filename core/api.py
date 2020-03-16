@@ -5,6 +5,7 @@ from enum import Enum
 from core.models import State
 from core.config import API_URL
 
+
 def get_status():
     data = fetch_data()
     return parse_result(data)
@@ -21,7 +22,6 @@ def fetch_data():
     except requests.ConnectionError:
         return None
 
+
 def parse_result(json):
     return State(json) if json is not None else State()
-
-
