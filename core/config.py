@@ -2,6 +2,7 @@ import json
 import os
 
 API_URL = 'https://hackaton.azurewebsites.net/status'
+WEB_URL = 'https://pyrafikator5000.stackblitz.io'
 USERCONFIG_PATH = 'userconfig.json'
 
 class Config():

@@ -12,7 +12,7 @@ class Status(Enum):
         return self.value
 
     def __eq__(self, other):
-        return self.value == other
+        return self.name == other
 
 
 class StatusItem:
@@ -43,6 +43,7 @@ class State:
         self.status = item['status']
         self.details = self.parse_items(item['statusDetails'])
         self.others = self.parse_items(item['otherMonitoredItems'])
+        self.observedChanged = False
 
 
     def parse_items(self, items):

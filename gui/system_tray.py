@@ -4,7 +4,7 @@ import sys
 from enum import Enum
 from functools import partial
 from PyQt5 import QtCore, QtGui, QtWidgets
-from core import API_URL, Config, get_status, Status, StatusItem, State
+from core import Config, get_status, State, Status, StatusItem, WEB_URL
 
 class Icon(Enum):
     Failure = "red"
@@ -23,7 +23,7 @@ has_matching_items = lambda items, pattern: any([has_match(i.details, pattern) f
 
 have_same_items = lambda d1, d2: d1.keys() == d2.keys()
 
-def get_filtered_diff(old, new, pattern):
+def has_matching_diff(old, new, pattern):
     det_old, det_new = list(map(lambda i: i.details, old.values())), list(map(lambda i: i.details, new.values()))
     diff = list(set(det_new) - set(det_old))
     filtered = list(filter(lambda d: has_match(d, pattern), diff))
@@ -50,7 +50,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
         menu = QtWidgets.QMenu(parent)
         label_action = menu.addAction("Pyraficator-tray")
-        label_action.triggered.connect(partial(SystemTrayIcon.open_in_browser, self, API_URL))
+        label_action.triggered.connect(partial(SystemTrayIcon.open_in_browser, self, WEB_URL))
         menu.addSeparator()
         self.status_menu = menu.addMenu(f"Status: {Status.Unknown}")
         self.others_menu = menu.addMenu(f"Other Monitored Items")
@@ -80,10 +80,12 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         same_status = new_state.status == self.state.status
         same_details = have_same_items(self.state.details, new_state.details)
         same_others = have_same_items(self.state.others, new_state.others)
-        new_filtered_items, has_matching = None, None
+        new_matching_items, has_matching, old_has_matching = None, None, None
         if self.config.notificationRegex is not None:
-            new_filtered_items = get_filtered_diff(self.state.details, new_state.details, self.config.notificationRegex)
+            new_matching_items = has_matching_diff(self.state.details, new_state.details, self.config.notificationRegex)
             has_matching = has_matching_items(new_state.details, self.config.notificationRegex)
+            old_has_matching = has_matching_items(self.state.details, self.config.notificationRegex)
+            new_state.observedChanged = new_state.status != Status.Success and (self.state.observedChanged or has_matching or new_matching_items)
 
         if not same_status:
             self.status_menu.setTitle(get_menu_name(new_state.status))
@@ -95,9 +97,15 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
         if not same_others:
             self.create_menu_items(self.others_menu, new_state.others)
 
+        should_show_notification = new_state.status in self.config.notificationStatuses and \
+            (not same_status or not same_details) if self.config.notificationRegex is None else \
+                (new_state.status == Status.Success and (not same_status and (old_has_matching or self.state.observedChanged))) or \
+                (new_state.status == Status.InProgress and ((not same_status and has_matching) or new_matching_items)) or \
+                (new_state.status == Status.Failure and ((not same_status and has_matching) or new_matching_items))
+
         self.state = new_state
 
-        if new_state.status in self.config.notificationStatuses and (((not same_status and has_matching) or new_filtered_items) if self.config.notificationRegex is not None else (not same_status or not same_details)):
+        if should_show_notification:
             self.show_notification()
 
 
