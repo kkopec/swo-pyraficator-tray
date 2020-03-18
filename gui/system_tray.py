@@ -98,10 +98,10 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
             self.create_menu_items(self.others_menu, new_state.others)
 
         should_show_notification = new_state.status in self.config.notificationStatuses and \
-            (not same_status or not same_details) if self.config.notificationRegex is None else \
+            ((not same_status or not same_details) if self.config.notificationRegex is None else \
                 (new_state.status == Status.Success and (not same_status and (old_has_matching or self.state.observedChanged))) or \
                 (new_state.status == Status.InProgress and ((not same_status and has_matching) or new_matching_items)) or \
-                (new_state.status == Status.Failure and ((not same_status and has_matching) or new_matching_items))
+                (new_state.status == Status.Failure and ((not same_status and has_matching) or new_matching_items)))
 
         self.state = new_state
 
