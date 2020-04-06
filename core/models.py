@@ -34,15 +34,17 @@ class StatusItem:
 
 INIT_STATE = {
     "status": "Unknown",
-    "statusDetails": None,
-    "otherMonitoredItems": None,
+    "errorItems": None,
+    "inProgressItems": None,
+    "successItems": None,
 }
 
 class State:
     def __init__(self, item = INIT_STATE):
         self.status = item['status']
-        self.details = self.parse_items(item['statusDetails'])
-        self.others = self.parse_items(item['otherMonitoredItems'])
+        self.success = self.parse_items(item['successItems'])
+        self.in_progress = self.parse_items(item['inProgressItems'])
+        self.error = self.parse_items(item['errorItems'])
         self.observedChanged = False
 
 
