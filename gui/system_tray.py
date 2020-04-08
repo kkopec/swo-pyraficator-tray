@@ -102,10 +102,10 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
         if self.config.notificationRegex is None:
             status_criterium = {
-                [Status.Success]: not same_status,
-                [Status.InProgress]: not same_in_progress,
-                [Status.Failure]: not same_error,
-                [Status.Unknown]: False
+                "Success": not same_status,
+                "InProgress": not same_in_progress,
+                "Failure": not same_error,
+                "Unknown": False
             }[self.state.status]
         else:
             if new_state.status is Status.Success:
