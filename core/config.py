@@ -4,6 +4,7 @@ import os
 API_URL = 'https://hackaton.azurewebsites.net/status'
 WEB_URL = 'https://pyrafikator5000.stackblitz.io'
 USERCONFIG_PATH = 'userconfig.json'
+VERSION = '0.2.1'
 
 class Config():
     def __init__(self):

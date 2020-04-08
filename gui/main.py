@@ -1,12 +1,12 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-from core import Config
+from core import Config, VERSION
 from gui.system_tray import SystemTrayIcon
 
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    app.setApplicationName('Pyraficator-tray')
+    app.setApplicationName(f'Pyraficator-tray v{VERSION}')
 
     config = Config()
 
